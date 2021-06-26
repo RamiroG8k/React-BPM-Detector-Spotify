@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { SpotifyWebApi, getIntervals, getPeaks } from './util';
 
 const App = () => {
@@ -9,22 +9,26 @@ const App = () => {
     const audioRef = useRef();
     const spotifyApi = new SpotifyWebApi();
 
-    spotifyApi.getToken().then(function (response) {
-        spotifyApi.setAccessToken(response.token);
-    });
+    useEffect(() => {
+        spotifyApi.getToken().then((response) => {
+            console.log(response);
+            spotifyApi.setAccessToken(response.token);
+        });
+    }, []);
 
     const handleSubmit = (event) => {
+        const songInput = event.target.song.value;
         event.preventDefault();
 
-        spotifyApi.searchTracks(event.target.song.value.trim(), { limit: 1 })
+        spotifyApi.searchTracks(songInput.trim(), { limit: 1 })
             .then((response) => {
                 const track = response.tracks.items[0];
                 const previewUrl = track.preview_url;
                 setTrack(track.preview_url);
-                var request = new XMLHttpRequest();
+                let request = new XMLHttpRequest();
                 request.open('GET', previewUrl, true);
                 request.responseType = 'arraybuffer';
-                request.onload = function () {
+                request.onload = () => {
 
                     // Create offline context
                     var OfflineContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
@@ -71,16 +75,16 @@ const App = () => {
                         offlineContext.startRendering();
                     });
 
-                    offlineContext.oncomplete = function (e) {
-                        var buffer = e.renderedBuffer;
-                        var peaks = getPeaks([buffer.getChannelData(0), buffer.getChannelData(1)]);
-                        var groups = getIntervals(peaks);
+                    offlineContext.oncomplete = (e) => {
+                        const buffer = e.renderedBuffer;
+                        const peaks = getPeaks([buffer.getChannelData(0), buffer.getChannelData(1)]);
+                        let groups = getIntervals(peaks);
 
-                        var svg = document.querySelector('#svg');
+                        let svg = document.querySelector('#svg');
                         svg.innerHTML = '';
-                        var svgNS = 'http://www.w3.org/2000/svg';
-                        var rect;
-                        peaks.forEach(function (peak) {
+                        let svgNS = 'http://www.w3.org/2000/svg';
+                        let rect;
+                        peaks.forEach((peak) => {
                             rect = document.createElementNS(svgNS, 'rect');
                             rect.setAttributeNS(null, 'x', (100 * peak.position / buffer.length) + '%');
                             rect.setAttributeNS(null, 'y', 0);
@@ -97,7 +101,7 @@ const App = () => {
                         svg.appendChild(rect);
 
                         // svg.innerHTML = svg.innerHTML; // force repaint in some browsers
-                        const top = groups.sort(function (intA, intB) {
+                        const top = groups.sort((intA, intB) => {
                             return intB.count - intA.count;
                         }).splice(0, 5);
 
@@ -163,14 +167,16 @@ const App = () => {
         <section className="p-10 sm:py-10 sm:px-36 h-screen w-screen bg-gray-700 justify-center items-center">
             <div className="text-center sm:my-10">
                 <h1 className="text-4xl sm:text-5xl font-bold text-gray-400 my-3">Finding out the BPM of a song using Javascript</h1>
-                <p className="text-lg leading-tight sm:text-2xl text-gray-900 font-semibold">This demo uses the browser's <strong>Audio API</strong> to determine the tempo of a song, processing a chunk of
-                    30 seconds of a song.</p>
+                <p className="text-lg leading-tight sm:text-2xl text-gray-900 font-semibold">
+                    This demo uses the browser's <strong>Audio API</strong> to determine the tempo of a song, processing a chunk of
+                    30 seconds of a song.
+                </p>
             </div>
 
             <form onSubmit={handleSubmit} className="sm:flex my-5 sm:my-10 gap-5">
                 <div className="w-full">
-                    <input className="block w-full p-3 rounded-t-2xl focus:outline-none text-center" name="song"
-                        placeholder="Type the name of a track (e.g. Beyonce - Baby Boy)" />
+                    <input required className="block w-full p-3 rounded-t-2xl focus:outline-none text-center" name="song"
+                        placeholder="Type the name of a track (e.g. I think i like it)" />
                     <button className="block w-full bg-gray-400 p-3 rounded-b-2xl focus:outline-none" type="submit">
                         Search track &amp; Calculate tempo
                     </button>

@@ -1,16 +1,15 @@
 export var SpotifyWebApi = (() => {
+    let _baseUri = 'https://api.spotify.com/v1';
+    let _baseTokenUri = 'https://spotify-web-api-token.herokuapp.com';
+    let _accessToken = null;
 
-    var _baseUri = 'https://api.spotify.com/v1';
-    var _baseTokenUri = 'https://spotify-web-api-token.herokuapp.com';
-    var _accessToken = null;
-
-    var _promiseProvider = function (promiseFunction) {
+    const _promiseProvider = (promiseFunction) => {
         return new window.Promise(promiseFunction);
     };
 
-    var _checkParamsAndPerformRequest = function (requestData, options, callback) {
-        var opt = {};
-        var cb = null;
+    const _checkParamsAndPerformRequest = (requestData, options, callback) => {
+        let opt = {};
+        let cb = null;
 
         if (typeof options === 'object') {
             opt = options;
@@ -22,23 +21,18 @@ export var SpotifyWebApi = (() => {
         return _performRequest(requestData, cb);
     };
 
-    var _performRequest = function (requestData, callback) {
-        var promiseFunction = function (resolve, reject) {
-            var req = new XMLHttpRequest();
-            var type = requestData.type || 'GET';
-            if (type === 'GET') {
-                req.open(type,
-                    _buildUrl(requestData.url, requestData.params),
-                    true);
-            } else {
-                req.open(type, _buildUrl(requestData.url));
-            }
+    const _performRequest = (requestData, callback) => {
+        const promiseFunction = (resolve, reject) => {
+            const req = new XMLHttpRequest();
+            const type = 'GET';
+            req.open(type, _buildUrl(requestData.url, requestData.params), true);
+
             if (_accessToken) {
                 req.setRequestHeader('Authorization', 'Bearer ' + _accessToken);
             }
-            req.onreadystatechange = function () {
+            req.onreadystatechange = () => {
                 if (req.readyState === 4) {
-                    var data = null;
+                    let data = null;
                     try {
                         data = req.responseText ? JSON.parse(req.responseText) : '';
                     } catch (e) { }
@@ -76,24 +70,24 @@ export var SpotifyWebApi = (() => {
         }
     };
 
-    var _extend = function () {
-        var args = Array.prototype.slice.call(arguments);
-        var target = args[0];
-        var objects = args.slice(1);
+    const _extend = function () {
+        let args = Array.prototype.slice.call(arguments);
+        let target = args[0];
+        let objects = args.slice(1);
         target = target || {};
-        for (var i = 0; i < objects.length; i++) {
-            for (var j in objects[i]) {
+        for (let i = 0; i < objects.length; i++) {
+            for (let j in objects[i]) {
                 target[j] = objects[i][j];
             }
         }
         return target;
     };
 
-    var _buildUrl = function (url, parameters) {
-        var qs = '';
-        for (var key in parameters) {
+    const _buildUrl = (url, parameters) => {
+        let qs = '';
+        for (let key in parameters) {
             if (parameters.hasOwnProperty(key)) {
-                var value = parameters[key];
+                let value = parameters[key];
                 qs += encodeURIComponent(key) + '=' + encodeURIComponent(value) + '&';
             }
         }
@@ -104,7 +98,7 @@ export var SpotifyWebApi = (() => {
         return url;
     };
 
-    var Constr = function () { };
+    const Constr = function () { };
 
     Constr.prototype = {
         constructor: SpotifyWebApi
@@ -117,9 +111,7 @@ export var SpotifyWebApi = (() => {
      * @param {string} accessToken The access token
      * @return {void}
      */
-    Constr.prototype.setAccessToken = function (accessToken) {
-        _accessToken = accessToken;
-    };
+    Constr.prototype.setAccessToken = (accessToken) => _accessToken = accessToken;
 
     /**
      * Fetches tracks from the Spotify catalog according to a query.
@@ -130,8 +122,8 @@ export var SpotifyWebApi = (() => {
      * one is the error object (null if no error), and the second is the value if the request succeeded.
      * @return {Object} Null if a callback is provided, a `Promise` object otherwise
      */
-    Constr.prototype.searchTracks = function (query, options, callback) {
-        var requestData = {
+    Constr.prototype.searchTracks = (query, options, callback) => {
+        const requestData = {
             url: _baseUri + '/search/',
             params: {
                 q: query,
@@ -151,8 +143,8 @@ export var SpotifyWebApi = (() => {
      * one is the error object (null if no error), and the second is the value if the request succeeded.
      * @return {Object} Null if a callback is provided, a `Promise` object otherwise
      */
-    Constr.prototype.getAudioFeaturesForTrack = function (trackId, callback) {
-        var requestData = {
+    Constr.prototype.getAudioFeaturesForTrack = (trackId, callback) => {
+        const requestData = {
             url: _baseUri + '/audio-features/' + trackId
         };
         return _checkParamsAndPerformRequest(requestData, {}, callback);
@@ -161,8 +153,8 @@ export var SpotifyWebApi = (() => {
     /**
      * Obtains a token to be used against the Spotify Web API
      */
-    Constr.prototype.getToken = function (callback) {
-        var requestData = {
+    Constr.prototype.getToken = (callback) => {
+        const requestData = {
             url: _baseTokenUri + '/token'
         };
         return _checkParamsAndPerformRequest(requestData, {}, callback);
@@ -189,14 +181,14 @@ export function getPeaks(data) {
     // This will allow us to ignore breaks, and allow us to address tracks with
     // a BPM below 120.
 
-    var partSize = 22050,
+    let partSize = 22050,
         parts = data[0].length / partSize,
         peaks = [];
 
-    for (var i = 0; i < parts; i++) {
-        var max = 0;
-        for (var j = i * partSize; j < (i + 1) * partSize; j++) {
-            var volume = Math.max(Math.abs(data[0][j]), Math.abs(data[1][j]));
+    for (let i = 0; i < parts; i++) {
+        let max = 0;
+        for (let j = i * partSize; j < (i + 1) * partSize; j++) {
+            let volume = Math.max(Math.abs(data[0][j]), Math.abs(data[1][j]));
             if (!max || (volume > max.volume)) {
                 max = {
                     position: j,
@@ -207,18 +199,15 @@ export function getPeaks(data) {
         peaks.push(max);
     }
 
-    // We then sort the peaks according to volume...
-
+    // Sort the peaks according to volume...
     peaks.sort(function (a, b) {
         return b.volume - a.volume;
     });
 
     // ...take the loundest half of those...
-
     peaks = peaks.splice(0, peaks.length * 0.5);
 
     // ...and re-sort it back based on position.
-
     peaks.sort(function (a, b) {
         return a.position - b.position;
     });
@@ -236,11 +225,11 @@ export function getIntervals(peaks) {
     // The interval that is seen the most should have the BPM that corresponds
     // to the track itself.
 
-    var groups = [];
+    let groups = [];
 
-    peaks.forEach(function (peak, index) {
-        for (var i = 1; (index + i) < peaks.length && i < 10; i++) {
-            var group = {
+    peaks.forEach((peak, index) => {
+        for (let i = 1; (index + i) < peaks.length && i < 10; i++) {
+            let group = {
                 tempo: (60 * 44100) / (peaks[index + i].position - peak.position),
                 count: 1
             };
@@ -255,9 +244,7 @@ export function getIntervals(peaks) {
 
             group.tempo = Math.round(group.tempo);
 
-            if (!(groups.some(function (interval) {
-                return (interval.tempo === group.tempo ? interval.count++ : 0);
-            }))) {
+            if (!(groups.some((interval) => (interval.tempo === group.tempo ? interval.count++ : 0)))) {
                 groups.push(group);
             }
         }
