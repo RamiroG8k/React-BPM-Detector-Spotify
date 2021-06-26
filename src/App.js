@@ -4,7 +4,9 @@ import { SpotifyWebApi, getIntervals, getPeaks } from './util';
 const App = () => {
     const [track, setTrack] = useState('');
     const [result, setResult] = useState({});
-    const audio = useRef();
+
+    const [isPlaying, setIsPlaying] = useState(false);
+    const audioRef = useRef();
     const spotifyApi = new SpotifyWebApi();
 
     spotifyApi.getToken().then(function (response) {
@@ -94,9 +96,8 @@ const App = () => {
                         rect.setAttributeNS(null, 'height', '100%');
                         svg.appendChild(rect);
 
-                        svg.innerHTML = svg.innerHTML; // force repaint in some browsers
-
-                        var top = groups.sort(function (intA, intB) {
+                        // svg.innerHTML = svg.innerHTML; // force repaint in some browsers
+                        const top = groups.sort(function (intA, intB) {
                             return intB.count - intA.count;
                         }).splice(0, 5);
 
@@ -112,12 +113,15 @@ const App = () => {
     }
 
     function updateProgressState() {
-        if (audio.paused) {
+        let progressIndicator = document.querySelector('#progress');
+        progressIndicator.style.width = '3px';
+        progressIndicator.style.fill = 'white';
+
+        if (audioRef.current.paused) {
             return;
         }
-        var progressIndicator = document.querySelector('#progress');
-        if (progressIndicator && audio.duration) {
-            progressIndicator.setAttribute('x', (audio.currentTime * 100 / audio.duration) + '%');
+        if (progressIndicator && audioRef.current.duration) {
+            progressIndicator.setAttribute('x', (audioRef.current.currentTime * 100 / audioRef.current.duration) + '%');
         }
         requestAnimationFrame(updateProgressState);
     }
@@ -136,22 +140,22 @@ const App = () => {
                     </div>
                 </div>
 
-                <div class="small">The tempo according to Spotify is {result.tempo} BPM</div>
+                <div class="small">The tempo according to Spotify is <strong>{result.tempo} BPM</strong></div>
             </>
         );
     }
 
-    // audio.addEventListener('playing', updateProgressState);
-    
     const handlePlay = () => {
-        audio.play();
+        const audio = audioRef.current;
 
-        // audio.paused ? audio.play() : audio.pause();
-        // if (audio.paused) {
-        //     audio.play();
-        // } else {
-        //     audio.pause();
-        // }
+        if (isPlaying) {
+            setIsPlaying(false);
+            audio.pause();
+        } else {
+            setIsPlaying(true);
+            audio.play();
+        }
+
         updateProgressState();
     };
 
@@ -171,10 +175,12 @@ const App = () => {
                         Search track &amp; Calculate tempo
                     </button>
                 </div>
-                <div className="flex my-2 sm:m-0 sm:w-2/12 justify-center items-center">
-                    {track && <button OnClick={() => handlePlay()} 
-                    className={track ? "block" : "hidden", "flex-1 h-full bg-gray-600 p-2 rounded-2xl focus:outline-none"}>{audio.paused ? 'Play track' : 'Pause track'}</button>}
-                </div>
+                {track && <div className="flex my-2 sm:m-0 sm:w-2/12 justify-center items-center">
+                    <button onClick={() => handlePlay()}
+                        className={track ? "block" : "hidden", "flex-1 h-full bg-gray-600 p-2 rounded-2xl focus:outline-none"}>
+                        {isPlaying ? 'Pause track' : 'Play track'}
+                    </button>
+                </div>}
             </form>
 
             <div>
@@ -182,7 +188,7 @@ const App = () => {
                     {result.track && <HandleResult />}
                 </div>
                 {track && <svg className="w-full bg-gray-500 h-16 my-4" id="svg"></svg>}
-                <audio ref={audio} src={track}></audio>
+                <audio ref={audioRef} src={track}></audio>
             </div>
         </section>
     );
