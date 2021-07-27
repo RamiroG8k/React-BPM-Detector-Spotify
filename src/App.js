@@ -11,7 +11,6 @@ const App = () => {
 
     useEffect(() => {
         spotifyApi.getToken().then((response) => {
-            console.log(response);
             spotifyApi.setAccessToken(response.token);
         });
     }, []);
@@ -35,6 +34,9 @@ const App = () => {
                     var offlineContext = new OfflineContext(2, 30 * 44100, 44100);
 
                     offlineContext.decodeAudioData(request.response, function (buffer) {
+
+                        console.log(request.response);
+
 
                         // Create buffer source
                         var source = offlineContext.createBufferSource();
@@ -104,6 +106,8 @@ const App = () => {
                         const top = groups.sort((intA, intB) => {
                             return intB.count - intA.count;
                         }).splice(0, 5);
+
+                        console.log(top);
 
                         spotifyApi.getAudioFeaturesForTrack(track.id)
                             .then((audioFeatures) => {
