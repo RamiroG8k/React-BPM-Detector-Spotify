@@ -27,6 +27,7 @@ const App = () => {
                 let request = new XMLHttpRequest();
                 request.open('GET', previewUrl, true);
                 request.responseType = 'arraybuffer';
+                
                 request.onload = () => {
 
                     // Create offline context
@@ -35,8 +36,7 @@ const App = () => {
 
                     offlineContext.decodeAudioData(request.response, function (buffer) {
 
-                        console.log(request.response);
-
+                        console.log(buffer);
 
                         // Create buffer source
                         var source = offlineContext.createBufferSource();
